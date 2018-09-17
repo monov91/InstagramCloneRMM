@@ -1,6 +1,5 @@
 package com.projects.radomonov.instagramclone.Utils;
 
-import com.projects.radomonov.instagramclone.Manifest;
 
 public class Permissions {
     public static final String[] PERMISSIONS = {

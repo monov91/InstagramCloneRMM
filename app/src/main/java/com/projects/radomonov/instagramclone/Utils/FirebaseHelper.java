@@ -1,6 +1,7 @@
 package com.projects.radomonov.instagramclone.Utils;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.support.annotation.NonNull;
@@ -22,10 +23,18 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.projects.radomonov.instagramclone.Home.MainActivity;
+import com.projects.radomonov.instagramclone.Models.Photo;
 import com.projects.radomonov.instagramclone.Models.User;
 import com.projects.radomonov.instagramclone.Models.UserAccountSettings;
 import com.projects.radomonov.instagramclone.Models.UserSettings;
+import com.projects.radomonov.instagramclone.Profile.AccountSettingsActivity;
 import com.projects.radomonov.instagramclone.R;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+import java.util.TimeZone;
 
 public class FirebaseHelper {
     private static final String TAG = "FirebaseHelper";
@@ -43,107 +52,133 @@ public class FirebaseHelper {
     private double mPhotoUploadProgress = 0;
 
 
-
-    public FirebaseHelper(Context context){
+    public FirebaseHelper(Context context) {
         mAuth = FirebaseAuth.getInstance();
         mContext = context;
         mFirebaseDatabase = FirebaseDatabase.getInstance();
         myRef = mFirebaseDatabase.getReference();
-        if(FirebaseAuth.getInstance() != null){
+        if (FirebaseAuth.getInstance() != null) {
             userID = FirebaseAuth.getInstance().getUid();
         }
         mStorageReference = FirebaseStorage.getInstance().getReference();
     }
 
-    public void uploadNewPhoto(String photoType,String caption,int count,String imgURL){
+    public void uploadNewPhoto(final String photoType, final String caption, int count, String imgURL,Bitmap bm) {
         Log.d(TAG, "uploadNewPhoto: attempting to upload a new photo");
 
         FilePaths filePaths = new FilePaths();
 
-        //New photo
-        if(photoType.equals(mContext.getString(R.string.new_photo))) {
+
             Log.d(TAG, "uploadNewPhoto: new photo");
 
             //Specify the location and name for the photo (name is "photo" + count + 1)
             String user_id = FirebaseAuth.getInstance().getCurrentUser().getUid();
-            final StorageReference storageReference = mStorageReference
-                    .child(filePaths.FIREBASE_IMAGE_STORAGE + "/" + user_id + "/photo" + (count + 1));
+            final StorageReference storageReference;
+            //checking wheter it is profile photo or not
+            if(photoType.equals(mContext.getString(R.string.new_photo))){
+                storageReference= mStorageReference
+                        .child(filePaths.FIREBASE_IMAGE_STORAGE + "/" + user_id + "/photo" + (count + 1));
+            } else {
+                storageReference= mStorageReference
+                        .child(filePaths.FIREBASE_IMAGE_STORAGE + "/" + user_id + "/profile_photo");
+            }
 
             //Convert image URL to bitmap
-            Bitmap bm = ImageManager.getBitmap(imgURL);
-            byte[] bytes = ImageManager.getBytesFromBitmap(bm,100);
+            if(bm == null){
+                bm = ImageManager.getBitmap(imgURL);
+            }
+            byte[] bytes = ImageManager.getBytesFromBitmap(bm, 100);
 
-            UploadTask  uploadTask = null;
+            UploadTask uploadTask = null;
             uploadTask = storageReference.putBytes(bytes);
-            Task<Uri> urlTask = uploadTask.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
-                @Override
-                public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> task) throws Exception {
-                    if(!task.isSuccessful()){
-                        throw task.getException();
-                    }
-
-                    return storageReference.getDownloadUrl();
-                }
-            })
+            uploadTask
+                    .addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+                        @Override
+                        public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
+                            double progress = (100 * taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
+                            if (progress - 30 > mPhotoUploadProgress) {
+                                Toast.makeText(mContext, "photo upload progress" + String.format("%.0f", progress), Toast.LENGTH_SHORT).show();
+                                mPhotoUploadProgress = progress;
+                            }
+                            Log.d(TAG, "onProgress: upload progress " + progress + " % done");
+                        }
+                    })
+                    .continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
+                        @Override
+                        public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> task) throws Exception {
+                            if (!task.isSuccessful()) {
+                                throw task.getException();
+                            }
+                            Log.d(TAG, "then: successful task");
+                            return storageReference.getDownloadUrl();
+                        }
+                    })
                     .addOnCompleteListener(new OnCompleteListener<Uri>() {
                         @Override
                         public void onComplete(@NonNull Task<Uri> task) {
-                            if(task.isSuccessful()){
+                            if (task.isSuccessful()) {
+                                Uri downloadURL = task.getResult();
                                 Log.d(TAG, "onComplete: DL URL : " + task.getResult());
+                                Toast.makeText(mContext, "Upload successful", Toast.LENGTH_SHORT).show();
+                                //If it isn't called for chaning the profile photo
+                                if(photoType.equals(mContext.getString(R.string.new_photo))){
+                                    //Add new Photo to the DB
+                                    addPhotoToDatabase(caption,downloadURL.toString());
+                                    //Navigate to the main feed
+                                    Intent intent = new Intent(mContext, MainActivity.class);
+                                    mContext.startActivity(intent);
+                                }
+                                else {
+                                    //insert into 'user_accounts_settings node'
+                                    setProfilePhoto(downloadURL.toString());
+                                    //Navigate back to edit profile while it is being uploaded
+                                    ((AccountSettingsActivity)mContext).setViewPager(((AccountSettingsActivity)mContext)
+                                            .pagerAdapter.getFragmentNumber(mContext.getString(R.string.edit_profile_fragment)));
+                                }
                             }
                         }
-                    });
-           /* uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                @Override
-                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                    Task<Uri> firebaseUrl = storageReference.getDownloadUrl();
-                    // add the new photo to 'photo' node and 'user_photos' node
-//               Log.d(TAG, "onSuccess: result : " + firebaseUrl.getResult());
-                   Log.d(TAG, "onSuccess: task uri: " + firebaseUrl.toString());
-                    //navigate to the main feed so the user can see their photo
-                }
-            }).addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception e) {
-                    Log.d(TAG, "onFailure: photo upload failed");
-                    Toast.makeText(mContext, "Photo upload failed", Toast.LENGTH_SHORT).show();
-                }
-            }).addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
-                @Override
-                public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
-                    double progress = (100* taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
-
-                    if(progress - 15 > mPhotoUploadProgress) {
-                        Toast.makeText(mContext, "PhotoUploadProgress " + String.format("%.0f",progress), Toast.LENGTH_SHORT).show();
-                        mPhotoUploadProgress = progress;
-                    }
-
-                    Log.d(TAG, "onProgress: upload progress " + progress);
-                }
-            })
-            .addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
-                @Override
-                public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
-                    Log.d(TAG, "onComplete: download url : " + task.getResult());
-                }
-            });*/
-        }
-        // New profile photo
-        else {
-            if(photoType.equals(mContext.getString(R.string.profile_photo))) {
-                Log.d(TAG, "uploadNewPhoto: profile photo");
-
-
-            }
-        }
+                    })
+            ;
     }
 
-    public int getImageCount(DataSnapshot dataSnapshot){
+    private void setProfilePhoto(String url){
+        Log.d(TAG, "setProfilePhoto:  setting new progile image " + url);
+
+        myRef.child(mContext.getString(R.string.dbname_user_account_settings))
+                .child(mAuth.getCurrentUser().getUid())
+                .child(mContext.getString(R.string.profile_photo))
+                .setValue(url);
+    }
+
+    private void addPhotoToDatabase(String caption,String url){
+        Log.d(TAG, "addPhotoToDatabase: adding photo to the DB");
+
+        String tags = StringManipulation.getTags(caption);
+        String newPhotoKey =  myRef.child(mContext.getString(R.string.dbname_photos)).push().getKey();
+        Photo photo = new Photo();
+        photo.setCaption(caption);
+        photo.setDate_created(getTimeStamp());
+        photo.setImage_path(url);
+        photo.setTags(tags);
+        photo.setUser_id(mAuth.getCurrentUser().getUid());
+        photo.setPhoto_id(newPhotoKey);
+
+        myRef.child(mContext.getString(R.string.dbname_user_photos)).child(mAuth.getCurrentUser().getUid())
+                .child(newPhotoKey).setValue(photo);
+        myRef.child(mContext.getString(R.string.dbname_photos)).child(newPhotoKey).setValue(photo);
+    }
+
+    private String getTimeStamp(){
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.UK);
+        sdf.setTimeZone(TimeZone.getTimeZone("Europe/Athens"));
+        return sdf.format(new Date());
+    }
+    public int getImageCount(DataSnapshot dataSnapshot) {
         int count = 0;
         for (DataSnapshot ds : dataSnapshot
                 .child(mContext.getString(R.string.dbname_user_photos))
                 .child(userID)
-                .getChildren()){
+                .getChildren()) {
             count++;
         }
         return count;
@@ -151,9 +186,10 @@ public class FirebaseHelper {
 
     /**
      * update the email in the 'user' node
+     *
      * @param email
      */
-    public void updateEmail(String email){
+    public void updateEmail(String email) {
         Log.d(TAG, "updateUsername: updating email to " + email);
 
         myRef.child(mContext.getString(R.string.dbname_users))
@@ -162,7 +198,7 @@ public class FirebaseHelper {
                 .setValue(email);
     }
 
-    public void updateWebsite(String website){
+    public void updateWebsite(String website) {
         Log.d(TAG, "updateUserAccountSettings: Updating user account settings");
 
         myRef.child(mContext.getString(R.string.dbname_user_account_settings))
@@ -172,26 +208,26 @@ public class FirebaseHelper {
 
     }
 
-    public void updateDisplayName(String displayName){
+    public void updateDisplayName(String displayName) {
         myRef.child(mContext.getString(R.string.dbname_user_account_settings))
                 .child(userID)
                 .child(mContext.getString(R.string.field_display_name))
                 .setValue(displayName);
     }
 
-    public void updateDescription(String description){
+    public void updateDescription(String description) {
         myRef.child(mContext.getString(R.string.dbname_user_account_settings))
                 .child(userID)
                 .child(mContext.getString(R.string.field_description))
                 .setValue(description);
     }
 
-
     /**
      * update the username in the user node and the user_account_settings node
+     *
      * @param username
      */
-    public void updateUsername(String username){
+    public void updateUsername(String username) {
         Log.d(TAG, "updateUsername: updating username to " + username);
 
         myRef.child(mContext.getString(R.string.dbname_users))
@@ -204,7 +240,7 @@ public class FirebaseHelper {
                 .setValue(username);
     }
 
-    public void updatePhoneNumber(long phoneNumber){
+    public void updatePhoneNumber(long phoneNumber) {
         myRef.child(mContext.getString(R.string.dbname_users))
                 .child(userID)
                 .child(mContext.getString(R.string.field_phone_number))
@@ -231,11 +267,12 @@ public class FirebaseHelper {
 
     /**
      * Register a new email and password to Firebase Authentication
+     *
      * @param email
      * @param password
      * @param username
      */
-    public void registerNewEmail(String email,String password,String username){
+    public void registerNewEmail(String email, String password, String username) {
 
         mAuth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
@@ -260,15 +297,15 @@ public class FirebaseHelper {
                 });
     }
 
-    public void sendVerificationEmail(){
+    public void sendVerificationEmail() {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
 
-        if(user != null){
+        if (user != null) {
             user.sendEmailVerification().addOnCompleteListener(new OnCompleteListener<Void>() {
                 @Override
                 public void onComplete(@NonNull Task<Void> task) {
-                    if(task.isSuccessful()){
-                        
+                    if (task.isSuccessful()) {
+
                     } else {
                         Log.d(TAG, "onComplete: Couldn't send verification email");
                     }
@@ -279,28 +316,30 @@ public class FirebaseHelper {
 
     /**
      * Add information to the users node and user_account_settings in DB
+     *
      * @param email
      * @param username
      * @param description
      * @param website
      * @param profile_photo
      */
-    public void addNewUser(String email,String username,String description,String website,String profile_photo){
+    public void addNewUser(String email, String username, String description, String website, String profile_photo) {
 
-        User user = new User(userID,1,email,StringManipulation.condenseUsername(username));
+        User user = new User(userID, 1, email, StringManipulation.condenseUsername(username)    );
 
         myRef.child(mContext.getString(R.string.dbname_users))
                 .child(userID).setValue(user);
 
         UserAccountSettings settings = new UserAccountSettings(
-            description,
-            username,
+                description,
+                username,
                 0,
                 0,
                 0,
                 profile_photo,
                 StringManipulation.condenseUsername(username),
-                website
+                website,
+                userID
         );
 
         myRef.child(mContext.getString(R.string.dbname_user_account_settings))
@@ -312,20 +351,21 @@ public class FirebaseHelper {
     /**
      * Retrieves the account settings for user currently logged in
      * Database = user_account_settings node
+     *
      * @param dataSnapshot
      * @return
      */
-    public UserSettings getUserSettings(DataSnapshot dataSnapshot){
+    public UserSettings getUserSettings(DataSnapshot dataSnapshot) {
         Log.d(TAG, "getUserAccountSettings: retrieving user account settings from Firebase");
         UserAccountSettings settings = new UserAccountSettings();
         User user = new User();
 
-        for(DataSnapshot ds : dataSnapshot.getChildren()){
+        for (DataSnapshot ds : dataSnapshot.getChildren()) {
             // user_account_settings Node
-            if(ds.getKey().equals(mContext.getString(R.string.dbname_user_account_settings))){
+            if (ds.getKey().equals(mContext.getString(R.string.dbname_user_account_settings))) {
                 Log.d(TAG, "getUserSettings: datasnapshot" + ds);
 
-                try{
+                try {
 
                     settings.setDisplay_name(
                             ds.child(userID)
@@ -361,12 +401,12 @@ public class FirebaseHelper {
                                     .getFollowers());
                     Log.d(TAG, "getUserAccountSettings: Retrieved user_account_seettings info :" + settings.toString());
 
-                } catch (NullPointerException e){
+                } catch (NullPointerException e) {
                     Log.d(TAG, "getUserAccountSettings: NullPointerException : " + e.getMessage());
                 }
             }
             // users Node
-            if(ds.getKey().equals(mContext.getString(R.string.dbname_users))) {
+            if (ds.getKey().equals(mContext.getString(R.string.dbname_users))) {
                 Log.d(TAG, "getUserSettings: datasnapshot" + ds);
                 user.setUsername(
                         ds.child(userID)
@@ -387,7 +427,7 @@ public class FirebaseHelper {
                 Log.d(TAG, "getUserAccountSettings: Retrieved user info : " + user.toString());
             }
         }
-        return new UserSettings(user,settings);
+        return new UserSettings(user, settings);
 
     }
 }

@@ -1,23 +1,46 @@
 package com.projects.radomonov.instagramclone.Models;
 
-public class Photo {
+import android.os.Parcel;
+import android.os.Parcelable;
+
+import java.io.Serializable;
+import java.util.List;
+
+public class Photo implements Parcelable{
 
     private String caption;
     private String date_created;
     private String image_path;
     private String photo_id;
     private String tags;
-
-    public Photo(String caption, String date_created, String image_path, String photo_id, String tags) {
-        this.caption = caption;
-        this.date_created = date_created;
-        this.image_path = image_path;
-        this.photo_id = photo_id;
-        this.tags = tags;
-    }
+    private String user_id;
+    private List<Like> likes;
+    private List<Comment> comments;
 
     public Photo(){
+
     }
+
+    protected Photo(Parcel in) {
+        caption = in.readString();
+        date_created = in.readString();
+        image_path = in.readString();
+        photo_id = in.readString();
+        tags = in.readString();
+        user_id = in.readString();
+    }
+
+    public static final Creator<Photo> CREATOR = new Creator<Photo>() {
+        @Override
+        public Photo createFromParcel(Parcel in) {
+            return new Photo(in);
+        }
+
+        @Override
+        public Photo[] newArray(int size) {
+            return new Photo[size];
+        }
+    };
 
     public String getCaption() {
         return caption;
@@ -59,5 +82,54 @@ public class Photo {
         this.tags = tags;
     }
 
+    public String getUser_id() {
+        return user_id;
+    }
 
+    public void setUser_id(String user_id) {
+        this.user_id = user_id;
+    }
+
+    public List<Like> getLikes() {
+        return likes;
+    }
+
+    public void setLikes(List<Like> likes) {
+        this.likes = likes;
+    }
+
+    public List<Comment> getComments() {
+        return comments;
+    }
+
+    public void setComments(List<Comment> comments) {
+        this.comments = comments;
+    }
+
+    public Photo(String caption, String date_created, String image_path, String photo_id, String tags, String user_id, List<Like> likes, List<Comment> comments) {
+        this.caption = caption;
+        this.date_created = date_created;
+        this.image_path = image_path;
+        this.photo_id = photo_id;
+        this.tags = tags;
+        this.user_id = user_id;
+        this.likes = likes;
+        this.comments = comments;
+
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel parcel, int i) {
+        parcel.writeString(caption);
+        parcel.writeString(date_created);
+        parcel.writeString(image_path);
+        parcel.writeString(photo_id);
+        parcel.writeString(tags);
+        parcel.writeString(user_id);
+    }
 }

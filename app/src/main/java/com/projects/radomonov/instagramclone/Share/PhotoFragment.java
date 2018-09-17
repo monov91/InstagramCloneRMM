@@ -1,6 +1,7 @@
 package com.projects.radomonov.instagramclone.Share;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
@@ -11,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 
+import com.projects.radomonov.instagramclone.Profile.AccountSettingsActivity;
 import com.projects.radomonov.instagramclone.R;
 import com.projects.radomonov.instagramclone.Utils.Permissions;
 
@@ -60,7 +62,40 @@ public class PhotoFragment extends Fragment {
         if(requestCode == CAMERA_REQUEST_CODE){
             Log.d(TAG, "onActivityResult: done taking a photo");
             Log.d(TAG, "onActivityResult: navigating to final share screen");
-            // navigating to the final share screen to publish the photo
+
+            Bitmap bitmap = (Bitmap) data.getExtras().get("data");
+
+            if (isRootTask()) {
+                try {
+                    Log.d(TAG, "onActivityResult:  We received a new Bitmap from camera" + bitmap);
+                    Intent intent = new Intent(getActivity(), PostActivity.class);
+                    intent.putExtra(getString(R.string.selected_bitmap), bitmap);
+                    startActivity(intent);
+                } catch (NullPointerException e){
+                    Log.d(TAG, "onActivityResult: NullPointerException");
+                }
+            } else {
+                try {
+                    Log.d(TAG, "onActivityResult:  We received a new Bitmap from camera" + bitmap);
+                    Intent intent = new Intent(getActivity(), AccountSettingsActivity.class);
+                    intent.putExtra(getString(R.string.selected_bitmap), bitmap);
+                    intent.putExtra(getString(R.string.return_to_fragment),getString(R.string.edit_profile_fragment));
+                    startActivity(intent);
+                    //fixing back stack
+                    getActivity().finish();
+                } catch (NullPointerException e){
+                    Log.d(TAG, "onActivityResult: NullPointerException");
+                }
+            }
+
+        }
+    }
+
+    private boolean isRootTask() {
+        if (((ShareActivity) getActivity()).getTask() == 0) {
+            return true;
+        } else {
+            return false;
         }
     }
 }

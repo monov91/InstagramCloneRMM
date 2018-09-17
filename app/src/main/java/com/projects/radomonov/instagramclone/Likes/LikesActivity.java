@@ -29,7 +29,7 @@ public class LikesActivity extends AppCompatActivity {
     private void setUpBottomNavigationView(){
         BottomNavigationViewEx bottomNavigationViewEx  = findViewById(R.id.bottomNavViewBar);
         BottomNavigatinoViewHelper.setUpBottomNavigationView(bottomNavigationViewEx);
-        BottomNavigatinoViewHelper.enableNavigation(mContext,bottomNavigationViewEx);
+        BottomNavigatinoViewHelper.enableNavigation(mContext,bottomNavigationViewEx,this);
         Menu menu = bottomNavigationViewEx.getMenu();
         MenuItem item = menu.getItem(ACTIVITY_NUM);
         item.setChecked(true);

@@ -1,5 +1,6 @@
 package com.projects.radomonov.instagramclone.Utils;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.support.annotation.NonNull;
@@ -27,7 +28,7 @@ public class BottomNavigatinoViewHelper {
         bottomNavigationViewEx.setTextVisibility(false);
     }
 
-    public static void enableNavigation(final Context context, BottomNavigationViewEx view){
+    public static void enableNavigation(final Context context, BottomNavigationViewEx view, final Activity callingActivity){
         view.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
@@ -53,7 +54,7 @@ public class BottomNavigatinoViewHelper {
                         context.startActivity(intent5);
                         break;
                 }
-
+                callingActivity.overridePendingTransition(R.anim.fade_in,R.anim.fade_out);
 
                 return false;
             }

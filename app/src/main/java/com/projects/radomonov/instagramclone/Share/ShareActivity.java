@@ -51,6 +51,11 @@ public class ShareActivity extends AppCompatActivity {
         //setUpBottomNavigationView();
     }
 
+    public int getTask(){
+        Log.d(TAG, "getTask: TASK : " + getIntent().getFlags());
+        return getIntent().getFlags();
+    }
+
     /**
      * Setup viewPager for managing the tabs
      */
@@ -59,7 +64,7 @@ public class ShareActivity extends AppCompatActivity {
         adapter.addFragment(new GalleryFragment());
         adapter.addFragment(new PhotoFragment());
 
-        mViewPager = findViewById(R.id.container);
+        mViewPager = findViewById(R.id.viewpager_container);
         mViewPager.setAdapter(adapter);
         TabLayout tabLayout = findViewById(R.id.tabsBottom);
         tabLayout.setupWithViewPager(mViewPager);
@@ -132,7 +137,7 @@ public class ShareActivity extends AppCompatActivity {
     private void setUpBottomNavigationView(){
         BottomNavigationViewEx bottomNavigationViewEx  = findViewById(R.id.bottomNavViewBar);
         BottomNavigatinoViewHelper.setUpBottomNavigationView(bottomNavigationViewEx);
-        BottomNavigatinoViewHelper.enableNavigation(mContext,bottomNavigationViewEx);
+        BottomNavigatinoViewHelper.enableNavigation(mContext,bottomNavigationViewEx,this);
         Menu menu = bottomNavigationViewEx.getMenu();
         MenuItem item = menu.getItem(ACTIVITY_NUM);
         item.setChecked(true);

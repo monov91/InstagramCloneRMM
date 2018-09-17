@@ -1,6 +1,7 @@
 package com.projects.radomonov.instagramclone.Share;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.media.Image;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -37,6 +38,8 @@ public class PostActivity extends AppCompatActivity{
     private String mAppend = "file:/";
     private int imageCount = 0;
     private String imgURL;
+    private Intent intent;
+    private Bitmap bitmap;
 
     //widgets
     private EditText mCaption;
@@ -67,12 +70,21 @@ public class PostActivity extends AppCompatActivity{
                 //upload the image to firebase
                 Log.d(TAG, "onClick: Attempting to upload new photo");
                 String caption = mCaption.getText().toString();
-                mFirebaseHelper.uploadNewPhoto(getString(R.string.new_photo),caption,imageCount,imgURL);
+
+                if(intent.hasExtra(getString(R.string.selected_image))){
+                    imgURL = intent.getStringExtra(getString(R.string.selected_image));
+                    Log.d(TAG, "setImage: got the img ULR : " + imgURL);
+                    mFirebaseHelper.uploadNewPhoto(getString(R.string.new_photo),caption,imageCount,imgURL,null);
+                } else {
+                    //From camera
+                    if(intent.hasExtra(getString(R.string.selected_bitmap))){
+                        bitmap = (Bitmap) intent.getParcelableExtra(getString(R.string.selected_bitmap));
+                        Log.d(TAG, "setImage: got the bitmap");
+                        mFirebaseHelper.uploadNewPhoto(getString(R.string.new_photo),caption,imageCount,null,bitmap);
+                    }
+                }
             }
         });
-
-
-
     }
 
 
@@ -98,10 +110,24 @@ public class PostActivity extends AppCompatActivity{
      * get the image from the incoming intent and display it
      */
     private void setImage(){
-        Intent intent = getIntent();
-        imgURL = intent.getStringExtra(getString(R.string.selected_image));
+        intent = getIntent();
+
         ImageView imageView = findViewById(R.id.imageShare);
-        UniversalImageLoader.setImage(imgURL,imageView,null,mAppend);
+//        UniversalImageLoader.setImage(imgURL,imageView,null,mAppend);
+        //From gallery
+        if(intent.hasExtra(getString(R.string.selected_image))){
+            imgURL = intent.getStringExtra(getString(R.string.selected_image));
+            Log.d(TAG, "setImage: got the img ULR : " + imgURL);
+            UniversalImageLoader.setImage(imgURL,imageView,null,mAppend);
+        } else {
+            //From camera
+            if(intent.hasExtra(getString(R.string.selected_bitmap))){
+                bitmap = (Bitmap) intent.getParcelableExtra(getString(R.string.selected_bitmap));
+                Log.d(TAG, "setImage: got the bitmap" + bitmap);
+                imageView.setImageBitmap(bitmap);
+            }
+        }
+
     }
        /*
     ----------------------------------------- Firebase ----------------------------------

@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="@color/white">
+    <de.hdodenhof.circleimageview.CircleImageView
+        android:id="@+id/comment_profile_image"
+        android:layout_width="45dp"
+        android:layout_height="45dp"
+        android:layout_marginTop="15dp"
+        android:layout_marginLeft="20dp"
+        android:src="@drawable/ic_android"
+        app:civ_border_color="@color/black"
+        app:civ_border_width="0.5dp"
+        />
+    
+    <RelativeLayout
+        android:id="@+id/relLayout1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@id/comment_profile_image"
+        android:layout_marginTop="15dp"
+        android:background="@drawable/grey_border_bottom"
+        >
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="60dp"
+            android:layout_marginBottom="20dp"
+            >
+           <TextView
+              android:id="@+id/comment_username"
+               android:layout_width="wrap_content"
+               android:layout_height="wrap_content"
+               android:text="Username"
+               android:textColor="@color/black"
+               android:textSize="18sp"
+               android:layout_marginLeft="15dp"
+               android:textStyle="bold"
+               />
+            <TextView
+                android:id="@+id/comment"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="5dp"
+                android:textSize="18sp"
+                android:layout_toRightOf="@id/comment_username"
+                android:textColor="@color/black"
+                android:text="This is a comment"
+                />
+            <TextView
+                android:id="@+id/comment_time_posted"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="15dp"
+                android:layout_marginTop="15dp"
+                android:textSize="13sp"
+                android:textColor="@color/grey"
+                android:text="3 days ago"
+                android:layout_below="@id/comment"
+                />
+
+            <TextView
+                android:id="@+id/comment_likes"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="15dp"
+                android:layout_marginTop="15dp"
+                android:textSize="13sp"
+                android:textColor="@color/grey"
+                android:text="20 likes"
+                android:layout_toRightOf="@id/comment_time_posted"
+                android:layout_below="@id/comment"
+                />
+
+            <TextView
+                android:id="@+id/comment_reply"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="15dp"
+                android:layout_marginTop="15dp"
+                android:textSize="13sp"
+                android:textColor="@color/black"
+                android:textStyle="bold"
+                android:text="Reply"
+                android:layout_toRightOf="@id/comment_likes"
+                android:layout_below="@id/comment"
+                />
+        </RelativeLayout>
+        
+        <ImageView
+            android:id="@+id/comment_like"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_alignParentRight="true"
+            android:layout_marginRight="20dp"
+            android:src="@drawable/ic_heart_white"
+            android:layout_centerVertical="true"/>
+        
+    </RelativeLayout>
+
+
+</RelativeLayout>
