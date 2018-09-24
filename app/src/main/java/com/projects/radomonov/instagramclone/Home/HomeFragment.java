@@ -57,35 +57,29 @@ public class HomeFragment extends Fragment {
 
     private void getFollowing() {
         DatabaseReference reference = FirebaseDatabase.getInstance().getReference();
-        Query query = reference
-                .child(getString(R.string.dbname_following))
-                .child(FirebaseAuth.getInstance().getCurrentUser().getUid());
-        query.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for (DataSnapshot singleSnapshot : dataSnapshot.getChildren()) {
-                    Log.d(TAG, "onDataChange: found user " +
-                            singleSnapshot.child(getString(R.string.field_user_id)).getValue());
-                    mFollowing.add(singleSnapshot.child(getString(R.string.field_user_id)).getValue().toString());
+        if(FirebaseAuth.getInstance().getCurrentUser() != null){
+            Query query = reference
+                    .child(getString(R.string.dbname_following))
+                    .child(FirebaseAuth.getInstance().getCurrentUser().getUid());
+            query.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    for (DataSnapshot singleSnapshot : dataSnapshot.getChildren()) {
+                        Log.d(TAG, "onDataChange: found user " +
+                                singleSnapshot.child(getString(R.string.field_user_id)).getValue());
+                        mFollowing.add(singleSnapshot.child(getString(R.string.field_user_id)).getValue().toString());
+                    }
+                    //Also add logged user to the list so that he sees his posts in the main feed
+                    mFollowing.add(FirebaseAuth.getInstance().getCurrentUser().getUid());
+                    getPhotos();
                 }
-                //Also add logged user to the list so that he sees his posts in the main feed
-                mFollowing.add(FirebaseAuth.getInstance().getCurrentUser().getUid());
-                mFollowing.add(FirebaseAuth.getInstance().getCurrentUser().getUid());
-                mFollowing.add(FirebaseAuth.getInstance().getCurrentUser().getUid());
-                mFollowing.add(FirebaseAuth.getInstance().getCurrentUser().getUid());
-                mFollowing.add(FirebaseAuth.getInstance().getCurrentUser().getUid());
-                mFollowing.add(FirebaseAuth.getInstance().getCurrentUser().getUid());
-                getPhotos();
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+                }
+            });
+        }
     }
 
-    // TYPO
     private void getPhotos() {
         Log.d(TAG, "getPhotos: getting photos");
         DatabaseReference reference = FirebaseDatabase.getInstance().getReference();
@@ -100,7 +94,6 @@ public class HomeFragment extends Fragment {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     for (DataSnapshot singleSnapshot : dataSnapshot.getChildren()) {
-                        //photos.add(singleSnapshot.getValue(Photo.class));
                         Log.d(TAG, "onDataChange: SNAPSHOT " + singleSnapshot.getValue().toString());
                         //Fixing common Firebase issue where it sees a list of values in the Database as a Map
                         Photo photo = new Photo();
@@ -130,17 +123,13 @@ public class HomeFragment extends Fragment {
                             Log.d(TAG, "onDataChange: NullPointerException " + e.getMessage());
                         }
                     }
-                    //TYPO
                     if (count >= mFollowing.size() - 1) {
                         // display photos
                         displayPhotos();
                     }
-
                 }
-
                 @Override
                 public void onCancelled(DatabaseError databaseError) {
-
                 }
             });
         }
@@ -151,7 +140,6 @@ public class HomeFragment extends Fragment {
         mPaginatedPhotos = new ArrayList<>();
         if (mPhotos != null) {
             try {
-
                 Collections.sort(mPhotos, new Comparator<Photo>() {
                     @Override
                     public int compare(Photo p1, Photo p2) {
@@ -162,7 +150,6 @@ public class HomeFragment extends Fragment {
                 if(iterations > 10){
                     iterations = 10;
                 }
-
                 mResults = iterations;
                 for(int i = 0; i < iterations; i++){
                     mPaginatedPhotos.add(mPhotos.get(i));
@@ -171,7 +158,6 @@ public class HomeFragment extends Fragment {
                 mListView.setAdapter(mAdapter);
             } catch (NullPointerException e) {
                 Log.d(TAG, "displayPhotos: NullPointerException " + e.getMessage());
-
             } catch (IndexOutOfBoundsException e) {
                 Log.d(TAG, "displayPhotos: IndexOutOfBoundsException " + e.getMessage());
             }
@@ -199,7 +185,6 @@ public class HomeFragment extends Fragment {
             }
         } catch (NullPointerException e) {
             Log.d(TAG, "displayPhotos: NullPointerException " + e.getMessage());
-
         } catch (IndexOutOfBoundsException e) {
             Log.d(TAG, "displayPhotos: IndexOutOfBoundsException " + e.getMessage());
         }

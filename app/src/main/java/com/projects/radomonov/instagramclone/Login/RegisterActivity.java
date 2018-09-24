@@ -81,7 +81,7 @@ public class RegisterActivity extends AppCompatActivity {
 
     private boolean isStringNull(String str){
         Log.d(TAG, "isStringNull: checking if string is null");
-        if(str.equals("") || str.equals(null)){
+        if(str.trim().equals("") || str.equals(null)){
             return true;
         } else {
             return false;
@@ -100,11 +100,19 @@ public class RegisterActivity extends AppCompatActivity {
                     showProgressBar();
                     firebaseHelper.registerNewEmail(email,password,username);
                 }
+                hideProgressBar();
             }
         });
 
     }
 
+    /**
+     *
+     * @param email
+     * @param username
+     * @param password
+     * @return
+     */
     private boolean checkInputs(String email,String username,String password){
         Log.d(TAG, "checkInputs: checking for null values");
         if(isStringNull(email) || isStringNull(username) || isStringNull(password)){
@@ -119,7 +127,7 @@ public class RegisterActivity extends AppCompatActivity {
              */
 
     /**
-     * check if @param already exists in the database
+     * check if @param already exists in the database . If it does append random string to it
      * @param username
      */
     private void checkIfUsernameExists(final String username) {
@@ -133,7 +141,6 @@ public class RegisterActivity extends AppCompatActivity {
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-
                 for(DataSnapshot singleDataSnapshot : dataSnapshot.getChildren()){
                     Log.d(TAG, "checkIfUsernameExists: FOUND MATCH : " + singleDataSnapshot.getValue(User.class).getUsername());
                     Toast.makeText(mContext, "That username already exists", Toast.LENGTH_SHORT).show();

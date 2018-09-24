@@ -58,7 +58,7 @@ public class LoginActivity extends AppCompatActivity {
 
     private boolean isStringNull(String str){
         Log.d(TAG, "isStringNull: checking if string is null");
-        if(str.equals("") || str.equals(null)){
+        if(str.trim().equals("") || str.equals(null)){
             return true;
         } else {
             return false;
@@ -101,12 +101,23 @@ public class LoginActivity extends AppCompatActivity {
                                  */
                             if(task.isSuccessful()){
                                 try{
+                                    Log.d(TAG, "onComplete: user - " + user.getUid());
                                     if(user.isEmailVerified()){
                                         Log.d(TAG, "onComplete email verified: success . Navigate to Home Activity");
                                         Intent intent = new Intent(mContext,MainActivity.class);
                                         startActivity(intent);
                                     } else {
-                                        Toast.makeText(mContext, "Email is not verified . Check your email inbox", Toast.LENGTH_SHORT).show();
+                                        Toast.makeText(mContext, "Email is not verified . Resending confirmation email", Toast.LENGTH_SHORT).show();
+                                        user.sendEmailVerification().addOnCompleteListener(new OnCompleteListener<Void>() {
+                                            @Override
+                                            public void onComplete(@NonNull Task<Void> task) {
+                                                if (task.isSuccessful()) {
+
+                                                } else {
+                                                    Log.d(TAG, "onComplete: Couldn't send verification email");
+                                                }
+                                            }
+                                        });
                                         mAuth.signOut();
                                     }
                                 } catch(NullPointerException e){

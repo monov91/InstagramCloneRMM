@@ -18,7 +18,7 @@ public class ConfirmPasswordDialog extends DialogFragment{
     private static final String TAG = "ConfirmPasswordDialog";
 
     public interface onConfirmPasswordListener{
-        public void onConfirmPassword(String password);
+            void onConfirmPassword(String password);
     }
     onConfirmPasswordListener mOnConfirmPasswordListener;
 

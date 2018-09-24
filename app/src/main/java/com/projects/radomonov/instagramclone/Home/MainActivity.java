@@ -151,8 +151,11 @@ public class MainActivity extends AppCompatActivity
     private void checkCurrentUser(FirebaseUser user){
         Log.d(TAG, "checkCurrentUser: checking if user is logged in");
         if(user == null){
+            Log.d(TAG, "checkCurrentUser: user is null");
             Intent intent = new Intent(mContext, LoginActivity.class);
             startActivity(intent);
+        } else {
+            mViewPager.setCurrentItem(HOME_FRAGMENT);
         }
     }
 
@@ -163,9 +166,9 @@ public class MainActivity extends AppCompatActivity
         //FirebaseUser currentUser = mAuth.getCurrentUser();
         //updateUI(currentUser);
 
-        mViewPager.setCurrentItem(HOME_FRAGMENT);
         mAuth.addAuthStateListener(mAuthStateListener);
         checkCurrentUser(mAuth.getCurrentUser());
+
     }
 
     @Override

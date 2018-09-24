@@ -16,8 +16,8 @@
 
 
     <!-- Firebase messages -->
-    <string name="auth_failed">auth failed</string>
-    <string name="auth_complete">auth complete</string>
+    <string name="auth_failed">Authentication failed</string>
+    <string name="auth_complete">Authentication complete</string>
 
     <!-- Firebase DB fields -->
     <string name="dbname_users">users</string>

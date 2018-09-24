@@ -6,6 +6,8 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.util.Log;
+import android.view.View;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.Continuation;
@@ -205,7 +207,6 @@ public class FirebaseHelper {
                 .child(userID)
                 .child(mContext.getString(R.string.field_website))
                 .setValue(website);
-
     }
 
     public void updateDisplayName(String displayName) {
@@ -281,16 +282,13 @@ public class FirebaseHelper {
                         if (task.isSuccessful()) {
                             // Sign in success, update UI with the signed-in user's information
                             Log.d(TAG, mContext.getString(R.string.auth_complete));
-                            FirebaseUser user = mAuth.getCurrentUser();
-                            Toast.makeText(mContext, mContext.getString(R.string.auth_complete),
-                                    Toast.LENGTH_SHORT).show();
                             userID = mAuth.getCurrentUser().getUid();
                             sendVerificationEmail();
 
                         } else {
                             // If sign in fails, display a message to the user.
                             Log.w(TAG, "createUserWithEmail:Failed to authenticate", task.getException());
-                            Toast.makeText(mContext, mContext.getString(R.string.auth_failed),
+                            Toast.makeText(mContext, "Email is taken",
                                     Toast.LENGTH_SHORT).show();
                         }
                     }
