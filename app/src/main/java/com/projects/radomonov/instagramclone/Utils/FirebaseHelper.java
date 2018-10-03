@@ -70,7 +70,6 @@ public class FirebaseHelper {
 
         FilePaths filePaths = new FilePaths();
 
-
             Log.d(TAG, "uploadNewPhoto: new photo");
 
             //Specify the location and name for the photo (name is "photo" + count + 1)
